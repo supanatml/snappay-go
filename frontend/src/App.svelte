@@ -1,27 +1,58 @@
 <script>
   import logo from './assets/images/logo-universal.png'
+  import termsPNG from './assets/terms.png'
   import {QRpopup} from '../wailsjs/go/main/App.js'
   import {VoucherPopup} from '../wailsjs/go/main/App.js'
-  import {TermsPopup} from '../wailsjs/go/main/App.js'
 
-  let resultText = "Please enter your name below 👇"
-  let name
+  let page = 0
 
-  function greet() {
-    Greet(name).then(result => resultText = result)
+  async function showQR() {
+    await QRpopup()
+    page = 1
+  }
+  async function showVoucher() {
+    await VoucherPopup()
+    page = 2
+  }
+  function showTerms() {
+    page = 3
+  }
+  function checkTx() {
+    page = 0
   }
 </script>
 
 <main>
-  <img alt="Wails logo" id="logo" src="{logo}">
-  <div class="btn-group">
-    <button class="btn" on:click={QRpopup}>Start</button>
-    <button class="btn" on:click={VoucherPopup}>Voucher</button>
-    <button class="btn" on:click={TermsPopup}>Terms</button>
-  </div>
+  {#if page === 0}
+    <img alt="Wails logo" id="logo" src="{logo}">
+    <div class="btn-group">
+      <button class="btn start" on:click={showQR}>Start</button>
+      <button class="btn voucher" on:click={VoucherPopup}>Voucher</button>
+      <button class="btn terms" on:click={showTerms}>Terms</button>
+    </div>
+  {:else if page === 1}
+      <img id="qr" src="qr.png" alt="No QR available"/>
+      <button class="btn paid" on:click={checkTx}>Confirm payment</button>
+  {:else if page === 2}
+        <img id="qr" src="v.png?" alt="No v.png available"/>
+  {:else if page === 3}
+    <img id="terms" src="{termsPNG}" alt="Terms unavailable" width="100%">
+    <button class="btn backbtn" on:click={() => (page = 0)}>Back</button>
+  {/if}
 </main>
 
 <style>
+
+  #terms {
+    display: block;
+    width: 100%;
+    margin-bottom: 40px;
+  }
+
+  #qr {
+    display: block;
+    width: 100%;
+  }
 
   #logo {
     display: block;
@@ -35,47 +66,41 @@
     background-origin: content-box;
   }
 
-  .result {
-    height: 20px;
-    line-height: 20px;
-    margin: 1.5rem auto;
+  .btn {
+    width: 350px;
+    height: 120px;
+    margin-bottom: 20px;
+    font-size: 0;
+    border: none;
   }
 
-  .input-box .btn {
+  .start {
+    background:url(./assets/start.png) no-repeat;
+    background-size: contain;
+    background-position: center;
+    margin-bottom: 60px;
+  }
+  .voucher {
+    background:url(./assets/voucherbtn.png) no-repeat;
+    background-size: contain;
+    background-position: center;
+  }
+  .terms {
+    background:url(./assets/viewterms3.png) no-repeat;
+    background-size: contain;
+    background-position: center;
+  }
+
+  .paid {
+    background:url(./assets/paid2.png) no-repeat;
+    background-size: contain;
+    background-position: center;
+  }
+
+  .backbtn {
     width: 60px;
     height: 30px;
-    line-height: 30px;
-    border-radius: 3px;
-    border: none;
-    margin: 0 0 0 20px;
-    padding: 0 8px;
-    cursor: pointer;
-  }
-
-  .input-box .btn:hover {
-    background-image: linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%);
-    color: #333333;
-  }
-
-  .input-box .input {
-    border: none;
-    border-radius: 3px;
-    outline: none;
-    height: 30px;
-    line-height: 30px;
-    padding: 0 10px;
-    background-color: rgba(240, 240, 240, 1);
-    -webkit-font-smoothing: antialiased;
-  }
-
-  .input-box .input:hover {
-    border: none;
-    background-color: rgba(255, 255, 255, 1);
-  }
-
-  .input-box .input:focus {
-    border: none;
-    background-color: rgba(255, 255, 255, 1);
+    font-size: 1rem;
   }
 
 </style>

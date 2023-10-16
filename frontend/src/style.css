@@ -1,7 +1,8 @@
 html {
-    background-color: rgba(27, 38, 54, 1);
+    background-color: rgba(27, 38, 54, 0);
     text-align: center;
     color: white;
+    overflow: hidden;
 }
 
 body {

@@ -6,6 +6,7 @@ import (
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
+	"github.com/wailsapp/wails/v2/pkg/options/windows"
 
 	"github.com/wailsapp/wails/v2/pkg/menu"
 	"github.com/wailsapp/wails/v2/pkg/menu/keys"
@@ -30,18 +31,25 @@ func main() {
 	err := wails.Run(&options.App{
 		Title:         "snappay-go",
 		Width:         420,
-		Height:        780,
+		Height:        800,
 		DisableResize: true,
 		Frameless:     false,
 		AlwaysOnTop:   false,
+		Menu:          AppMenu,
 		AssetServer: &assetserver.Options{
-			Assets: assets,
+			Assets:  assets,
+			Handler: NewHandler(),
 		},
 		BackgroundColour: &options.RGBA{R: 0, G: 0, B: 0, A: 0},
 		OnStartup:        app.startup,
 		OnShutdown:       app.shutdown,
 		Bind: []interface{}{
 			app,
+		},
+		Windows: &windows.Options{
+			WebviewIsTransparent:              true,
+			WindowIsTranslucent:               true,
+			DisableFramelessWindowDecorations: true,
 		},
 	})
 

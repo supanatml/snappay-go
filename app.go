@@ -3,7 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
+	"image/png"
 	"net"
+	"net/http"
+	"net/url"
+	"os"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -37,26 +44,61 @@ func (a *App) startup(ctx context.Context) {
 	//todo: keygen.sh
 }
 
+// cleanup on shutdown
 func (a *App) shutdown(ctx context.Context) {
 
 }
 
-// Greet returns a greeting for the given name
-func (a *App) Greet(name string) string {
-	return fmt.Sprintf("Hello %s, It's show time!", name)
-}
-
 func (a *App) QRpopup() {
-	//todo: get QR from GB
 	fmt.Println("QR popped")
+
+	//GBPrimePay URL and monetary amount to charge
+	gburl := "https://api.globalprimepay.com/v3/qrcode"
+	amount := "150.00"
+
+	client := &http.Client{
+		Timeout: time.Second * 1,
+	}
+
+	// url values formatting according to gbpay documentation
+	body := url.Values{}
+	body.Set("token", gbtoken)
+	body.Set("amount", amount)
+	body.Set("referenceNo", strconv.FormatInt(time.Now().Unix(), 10))
+
+	encodedBody := body.Encode()
+
+	req, err := http.NewRequest("POST", gburl, strings.NewReader(encodedBody))
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Content-Length", strconv.Itoa(len(encodedBody)))
+
+	response, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer response.Body.Close()
+
+	qrimage, err := png.Decode(response.Body)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// write received image/png to file
+	f, err := os.Create("qr.png")
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer f.Close()
+	if err = png.Encode(f, qrimage); err != nil {
+		fmt.Println(err)
+	}
 }
 
 func (a *App) VoucherPopup() {
-	//todo: get QR from GB
+	//todo: screen to enter voucher code for free sessions
 	fmt.Println("Voucher popped")
-}
-
-func (a *App) TermsPopup() {
-	//todo: get QR from GB
-	fmt.Println("Terms popped")
 }

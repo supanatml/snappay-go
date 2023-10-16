@@ -36,7 +36,7 @@
 
 <main>
   {#if page === 0}
-    <img alt="Wails logo" id="logo" src="{logo}">
+<!--    <img alt="Wails logo" id="logo" src="{logo}">-->
     <div class="btn-group">
       <button class="btn start" on:click={() => qrPromise = showQR()}>Start</button>
       <button class="btn voucher" on:click={showVoucher}>Voucher</button>
@@ -94,7 +94,8 @@
     background:url(./assets/start.png) no-repeat;
     background-size: contain;
     background-position: center;
-    margin-bottom: 60px;
+    margin-top: 100px;
+    margin-bottom: 160px;
   }
   .voucher {
     background:url(./assets/voucherbtn.png) no-repeat;
@@ -102,13 +103,14 @@
     background-position: center;
   }
   .terms {
-    background:url(./assets/viewterms3.png) no-repeat;
+    background:url(./assets/viewterms2.png) no-repeat;
     background-size: contain;
     background-position: center;
+    height: 300px;
   }
 
   .paid {
-    background:url(./assets/paid2.png) no-repeat;
+    background:url(./assets/paid.png) no-repeat;
     background-size: contain;
     background-position: center;
   }

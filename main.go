@@ -33,8 +33,8 @@ func main() {
 		Width:         420,
 		Height:        800,
 		DisableResize: true,
-		Frameless:     false,
-		AlwaysOnTop:   false,
+		Frameless:     true,
+		AlwaysOnTop:   true,
 		Menu:          AppMenu,
 		AssetServer: &assetserver.Options{
 			Assets:  assets,

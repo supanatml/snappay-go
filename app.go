@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -43,13 +44,17 @@ func checkMultipleInstanceRunning(a *App) bool {
 	//todo: debug why http.Listen stops listening when QRpopup is called
 }
 
+func checkValidLicense(a *App) {
+	//todo: keygen.sh
+}
+
 // startup is called when the app starts. The context is saved
 // so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 
 	checkMultipleInstanceRunning(a)
-	//todo: keygen.sh
+	checkValidLicense(a)
 }
 
 // cleanup on shutdown
@@ -61,8 +66,9 @@ func (a *App) QRpopup() string {
 	fmt.Println("QR popped")
 
 	//GBPrimePay URL and monetary amount to charge
-	gburl := "https://api.globalprimepay.com/v3/qrcode"
-	amount := "150.00"
+	//gburl := "https://api.globalprimepay.com/v3/qrcode"
+	gburl := "https://api.gbprimepay.com/v3/qrcode"
+	amount := "1.00"
 
 	client := &http.Client{
 		Timeout: time.Second * 5,
@@ -114,7 +120,8 @@ func (a *App) CheckTransaction(ref string) bool {
 	//todo: check transsaction with gbpay
 
 	//GBPrimePay URL
-	gburl := "https://api.globalprimepay.com/v1/check_status_txn"
+	//gburl := "https://api.globalprimepay.com/v1/check_status_txn"
+	gburl := "https://api.gbprimepay.com/v1/check_status_txn"
 	authkey := "Basic " + base64.StdEncoding.EncodeToString([]byte(gbsecret+":"))
 
 	fmt.Println(authkey)
@@ -155,13 +162,17 @@ func (a *App) CheckTransaction(ref string) bool {
 	txnMap := jsonMap["txn"].(map[string]interface{})
 	status := txnMap["status"]
 
+	fmt.Println(status)
+	fmt.Println(reflect.TypeOf(status))
+
 	//status code according to gbpay documentation "G = Generate , A = Authorize , S = Settle, V = Void, D = Decline"
-	if status == 'S' {
+	if status == "S" {
 		//start session
 		fmt.Println("yeahh")
 		a.StartSession()
 		return true
 	} else {
+		//todo: let gbpay know to not accept future payments
 		return false
 	}
 }
@@ -178,20 +189,9 @@ func (a *App) PrintLog(s string) {
 
 func (a *App) StartSession() {
 	//todo: call dslrbooth's API
-	url := "http://localhost:1500/api/start?mode=print"
+	dslrboothURL := "http://localhost:1500/api/start?mode=print" + "&password=" + dslrboothPassword
 
-	client := &http.Client{
-		Timeout: time.Second * 5,
-	}
-
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	req.Header.Add("password", dslrboothPassword)
-
-	response, err := client.Do(req)
+	response, err := http.Get(dslrboothURL)
 	if err != nil {
 		fmt.Println(err)
 	}

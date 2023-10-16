@@ -2,16 +2,20 @@
   import logo from './assets/images/logo-universal.png'
   import termsPNG from './assets/terms.png'
   import {QRpopup} from '../wailsjs/go/main/App.js'
+  import {CheckTransaction} from '../wailsjs/go/main/App.js'
+  import {StartSession} from '../wailsjs/go/main/App.js'
   import {VoucherPopup} from '../wailsjs/go/main/App.js'
   import {PrintLog} from '../wailsjs/go/main/App.js'
 
   let page = 0
   let qrPromise
   let timeoutID
+  let ref = "0"
+  //todo: pass ref instead of global var?
 
   async function showQR() {
     page = 1
-    let ref = await QRpopup();
+    ref = await QRpopup();
 	  timeoutID = setTimeout(() => page = 0, 600000);
     return ref
   }
@@ -23,9 +27,10 @@
   function showTerms() {
     page = 3
   }
-  function checkTx() {
+  function checkPaid() {
     page = 0
     clearTimeout(timeoutID)
+    let paid = CheckTransaction(ref)
   }
 </script>
 
@@ -43,7 +48,7 @@
     {:then ref}
         <img id="qr" src="qr.png?ref={ref}" alt="No QR available"/>
     {/await}
-      <button class="btn paid" on:click={checkTx}>Confirm payment</button>
+      <button class="btn paid" on:click={checkPaid}>Confirm payment</button>
   {:else if page === 2}
         <img id="qr" src="v.png" alt="No v.png available"/>
   {:else if page === 3}

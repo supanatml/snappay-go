@@ -25,11 +25,7 @@ func NewApp() *App {
 	return &App{}
 }
 
-// startup is called when the app starts. The context is saved
-// so we can call the runtime methods
-func (a *App) startup(ctx context.Context) {
-	a.ctx = ctx
-
+func checkMultipleInstanceRunning(a *App) bool {
 	// binds TPC port 45456 to prevent multiple instances running concurrently
 	listener, err := net.Listen("tcp4", "0.0.0.0:45456")
 	if err != nil {
@@ -40,7 +36,16 @@ func (a *App) startup(ctx context.Context) {
 	}
 	fmt.Println(listener.Addr())
 	fmt.Println("Port check passed")
+	return false
+	//todo: debug why http.Listen stops listening when QRpopup is called
+}
 
+// startup is called when the app starts. The context is saved
+// so we can call the runtime methods
+func (a *App) startup(ctx context.Context) {
+	a.ctx = ctx
+
+	checkMultipleInstanceRunning(a)
 	//todo: keygen.sh
 }
 
@@ -49,7 +54,7 @@ func (a *App) shutdown(ctx context.Context) {
 
 }
 
-func (a *App) QRpopup() {
+func (a *App) QRpopup() string {
 	fmt.Println("QR popped")
 
 	//GBPrimePay URL and monetary amount to charge
@@ -57,14 +62,16 @@ func (a *App) QRpopup() {
 	amount := "150.00"
 
 	client := &http.Client{
-		Timeout: time.Second * 1,
+		Timeout: time.Second * 5,
 	}
+
+	referenceNo := strconv.FormatInt(time.Now().Unix(), 10)
 
 	// url values formatting according to gbpay documentation
 	body := url.Values{}
 	body.Set("token", gbtoken)
 	body.Set("amount", amount)
-	body.Set("referenceNo", strconv.FormatInt(time.Now().Unix(), 10))
+	body.Set("referenceNo", referenceNo)
 
 	encodedBody := body.Encode()
 
@@ -96,9 +103,16 @@ func (a *App) QRpopup() {
 	if err = png.Encode(f, qrimage); err != nil {
 		fmt.Println(err)
 	}
+
+	return referenceNo
 }
 
 func (a *App) VoucherPopup() {
 	//todo: screen to enter voucher code for free sessions
 	fmt.Println("Voucher popped")
+}
+
+// for debugging purposes
+func (a *App) PrintLog(s string) {
+	fmt.Println(s)
 }

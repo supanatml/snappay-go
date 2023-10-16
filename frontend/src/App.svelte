@@ -3,22 +3,29 @@
   import termsPNG from './assets/terms.png'
   import {QRpopup} from '../wailsjs/go/main/App.js'
   import {VoucherPopup} from '../wailsjs/go/main/App.js'
+  import {PrintLog} from '../wailsjs/go/main/App.js'
 
   let page = 0
+  let qrPromise
+  let timeoutID
 
   async function showQR() {
-    await QRpopup()
     page = 1
+    let ref = await QRpopup();
+	  timeoutID = setTimeout(() => page = 0, 600000);
+    return ref
   }
   async function showVoucher() {
-    await VoucherPopup()
     page = 2
+	  setTimeout(() => page = 0, 10000);
+    await VoucherPopup()
   }
   function showTerms() {
     page = 3
   }
   function checkTx() {
     page = 0
+    clearTimeout(timeoutID)
   }
 </script>
 
@@ -26,15 +33,19 @@
   {#if page === 0}
     <img alt="Wails logo" id="logo" src="{logo}">
     <div class="btn-group">
-      <button class="btn start" on:click={showQR}>Start</button>
-      <button class="btn voucher" on:click={VoucherPopup}>Voucher</button>
+      <button class="btn start" on:click={() => qrPromise = showQR()}>Start</button>
+      <button class="btn voucher" on:click={showVoucher}>Voucher</button>
       <button class="btn terms" on:click={showTerms}>Terms</button>
     </div>
   {:else if page === 1}
-      <img id="qr" src="qr.png" alt="No QR available"/>
+    {#await qrPromise}
+      <h1>Loading...</h1>
+    {:then ref}
+        <img id="qr" src="qr.png?ref={ref}" alt="No QR available"/>
+    {/await}
       <button class="btn paid" on:click={checkTx}>Confirm payment</button>
   {:else if page === 2}
-        <img id="qr" src="v.png?" alt="No v.png available"/>
+        <img id="qr" src="v.png" alt="No v.png available"/>
   {:else if page === 3}
     <img id="terms" src="{termsPNG}" alt="Terms unavailable" width="100%">
     <button class="btn backbtn" on:click={() => (page = 0)}>Back</button>

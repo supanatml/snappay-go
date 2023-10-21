@@ -30,8 +30,8 @@ func main() {
 	// Create application with options
 	err := wails.Run(&options.App{
 		Title:         "snappay-go",
-		Width:         420,
-		Height:        800,
+		Width:         1280,
+		Height:        720,
 		DisableResize: true,
 		Frameless:     true,
 		AlwaysOnTop:   true,

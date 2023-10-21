@@ -1,9 +1,6 @@
 <script>
-  import logo from './assets/images/logo-universal.png'
-  import termsPNG from './assets/terms.png'
   import {QRpopup} from '../wailsjs/go/main/App.js'
   import {CheckTransaction} from '../wailsjs/go/main/App.js'
-  import {StartSession} from '../wailsjs/go/main/App.js'
   import {VoucherPopup} from '../wailsjs/go/main/App.js'
   import {PrintLog} from '../wailsjs/go/main/App.js'
 
@@ -13,47 +10,52 @@
   let ref = "0"
   //todo: pass ref instead of global var?
 
-  async function showQR() {
+  function showChoice() {
     page = 1
+  }
+  async function showQR() {
+    page = 2
     ref = await QRpopup();
 	  timeoutID = setTimeout(() => page = 0, 600000);
     return ref
   }
   async function showVoucher() {
-    page = 2
-	  setTimeout(() => page = 0, 10000);
+    page = 3
+	  setTimeout(() => page = 0, 60000);
     await VoucherPopup()
   }
-  function showTerms() {
-    page = 3
-  }
   function checkPaid() {
-    page = 0
-    clearTimeout(timeoutID)
     let paid = CheckTransaction(ref)
+    if(paid) {
+      clearTimeout(timeoutID)
+    }
   }
 </script>
 
 <main>
   {#if page === 0}
-<!--    <img alt="Wails logo" id="logo" src="{logo}">-->
     <div class="btn-group">
-      <button class="btn start" on:click={() => qrPromise = showQR()}>Start</button>
-      <button class="btn voucher" on:click={showVoucher}>Voucher</button>
-      <button class="btn terms" on:click={showTerms}>Terms</button>
+      <button class="btn start" on:click={showChoice}>Start</button>
     </div>
   {:else if page === 1}
+    <button class="btn pay" on:click={() => qrPromise = showQR()}>Pay</button>
+    <button class="btn voucher" on:click={showVoucher}>Voucher</button>
+  {:else if page === 2}
     {#await qrPromise}
       <h1>Loading...</h1>
     {:then ref}
         <img id="qr" src="qr.png?ref={ref}" alt="No QR available"/>
     {/await}
       <button class="btn paid" on:click={checkPaid}>Confirm payment</button>
-  {:else if page === 2}
-        <img id="qr" src="v.png" alt="No v.png available"/>
   {:else if page === 3}
-    <img id="terms" src="{termsPNG}" alt="Terms unavailable" width="100%">
-    <button class="btn backbtn" on:click={() => (page = 0)}>Back</button>
+    <div class="voucherpage">
+      <button class="btn back" on:click={() => (page = 0)}>Back</button>
+      <label class="voucherinput">Input your voucher</label>
+      <button class="numpad">0</button>
+      <button class="numpad">1</button>
+      <button class="numpad del">Del</button>
+      <button class="numpad ok">OK</button>
+    </div>
   {/if}
 </main>
 
@@ -94,25 +96,60 @@
     background:url(./assets/start.png) no-repeat;
     background-size: contain;
     background-position: center;
-    margin-top: 100px;
-    margin-bottom: 160px;
+    margin-top: 260px;
+  }
+  .pay {
+    background:url(./assets/pay.png) no-repeat;
+    background-size: contain;
+    background-position: center;
+    margin-top: 160px;
+  }
+  .voucherpage {
+    display: grid;
   }
   .voucher {
-    background:url(./assets/voucherbtn.png) no-repeat;
+    background:url(./assets/voucher.png) no-repeat;
     background-size: contain;
     background-position: center;
+    margin-top: 160px;
   }
-  .terms {
-    background:url(./assets/viewterms2.png) no-repeat;
+  .back {
+    background:url(./assets/back.png) no-repeat;
     background-size: contain;
     background-position: center;
-    height: 300px;
+    width: 200px;
+    position: fixed;
+    left: -40px;
+    overflow: visible;
   }
-
+  .numpad {
+    background:url(./assets/blank.png) no-repeat;
+    background-size: contain;
+    background-position: center;
+    width: 120px;
+    height: 120px;
+    font-size: 2rem;
+    border: none;
+  }
+  .del {
+    background:url(./assets/del.png) no-repeat;
+    background-size: contain;
+    width: 100px;
+    height: 90px;
+    font-size: 0;
+  }
+  .ok {
+    background:url(./assets/ok.png) no-repeat;
+    background-size: contain;
+    width: 120px;
+    height: 120px;
+    font-size: 0;
+  }
   .paid {
-    background:url(./assets/paid.png) no-repeat;
+    background:url(./assets/confirm.png) no-repeat;
     background-size: contain;
     background-position: center;
+    margin-top: 10px;
   }
 
   .backbtn {

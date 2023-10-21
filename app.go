@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"image/png"
@@ -11,11 +13,13 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/keygen-sh/keygen-go/v2"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
@@ -29,23 +33,65 @@ func NewApp() *App {
 	return &App{}
 }
 
-func checkMultipleInstanceRunning(a *App) bool {
+func checkSingleInstanceRunning() bool {
 	// binds TPC port 45456 to prevent multiple instances running concurrentl
 	listener, err := net.Listen("tcp4", "0.0.0.0:45456")
 	if err != nil {
 		fmt.Println(err)
 		//todo: add err checker
 		fmt.Println("Cannot run multiple instances concurrently.")
-		runtime.Quit(a.ctx)
+		return false
 	}
 	fmt.Println(listener.Addr())
 	fmt.Println("Port check passed")
-	return false
+	return true
 	//todo: debug why http.Listen stops listening when QRpopup is called
 }
 
-func checkValidLicense(a *App) {
+func checkValidLicense() bool {
 	//todo: keygen.sh
+	keygen.Account = keygenID
+	keygen.Product = keygenProductID
+	keygen.LicenseKey = licenseKey
+
+	out, err := exec.Command("powershell", "-command", "wmic csproduct get uuid").Output()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	uuid := strings.Split(string(out), "  \r\r\n")[1]
+
+	sha256out := sha256.Sum256([]byte(uuid))
+	fingerprint := hex.EncodeToString(sha256out[:])
+
+	fmt.Printf("%q\n", uuid)
+	fmt.Println(fingerprint)
+
+	license, err := keygen.Validate(fingerprint)
+	switch {
+	case err == keygen.ErrLicenseNotActivated:
+		//Activate the current fingerprint
+		fmt.Println("License not activated; attempting to activate.")
+		machine, err := license.Activate(fingerprint)
+		switch {
+		case err == keygen.ErrMachineLimitExceeded:
+			fmt.Println("Machine limit exceeded; exiting.")
+			return false
+		case err != nil:
+			fmt.Println("Machine activation failed; exiting.")
+			return false
+		default:
+			fmt.Println("New license activated on this machine.")
+			fmt.Println(machine)
+			return true
+		}
+	case err != nil:
+		fmt.Println("License is invalid.")
+		return false
+	default:
+		fmt.Println("License is valid; continuing.")
+		return true
+	}
 }
 
 // startup is called when the app starts. The context is saved
@@ -53,8 +99,9 @@ func checkValidLicense(a *App) {
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 
-	checkMultipleInstanceRunning(a)
-	checkValidLicense(a)
+	//if !checkSingleInstanceRunning() || !checkValidLicense() {
+	//	runtime.Quit(a.ctx)
+	//}
 }
 
 // cleanup on shutdown
@@ -68,7 +115,7 @@ func (a *App) QRpopup() string {
 	//GBPrimePay URL and monetary amount to charge
 	//gburl := "https://api.globalprimepay.com/v3/qrcode"
 	gburl := "https://api.gbprimepay.com/v3/qrcode"
-	amount := "1.00"
+	amount := "169.00"
 
 	client := &http.Client{
 		Timeout: time.Second * 5,

@@ -9,4 +9,4 @@ export function QRpopup():Promise<string>;
 
 export function StartSession():Promise<void>;
 
-export function VoucherPopup():Promise<void>;
+export function VoucherPopup():Promise<boolean>;

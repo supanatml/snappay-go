@@ -17,6 +17,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/keygen-sh/keygen-go/v2"
@@ -33,9 +34,12 @@ func NewApp() *App {
 	return &App{}
 }
 
+var listener net.Listener
+
 func checkSingleInstanceRunning() bool {
+	var err error
 	// binds TPC port 45456 to prevent multiple instances running concurrentl
-	listener, err := net.Listen("tcp4", "0.0.0.0:45456")
+	listener, err = net.Listen("tcp4", "0.0.0.0:45456")
 	if err != nil {
 		fmt.Println(err)
 		//todo: add err checker
@@ -54,7 +58,9 @@ func checkValidLicense() bool {
 	keygen.Product = keygenProductID
 	keygen.LicenseKey = licenseKey
 
-	out, err := exec.Command("powershell", "-command", "wmic csproduct get uuid").Output()
+	powershell := exec.Command("powershell", "-Command", "wmic csproduct get uuid")
+	powershell.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
+	out, err := powershell.Output()
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -99,9 +105,9 @@ func checkValidLicense() bool {
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 
-	//if !checkSingleInstanceRunning() || !checkValidLicense() {
-	//	runtime.Quit(a.ctx)
-	//}
+	if !checkSingleInstanceRunning() || !checkValidLicense() {
+		runtime.Quit(a.ctx)
+	}
 }
 
 // cleanup on shutdown
@@ -164,8 +170,6 @@ func (a *App) QRpopup() string {
 }
 
 func (a *App) CheckTransaction(ref string) bool {
-	//todo: check transsaction with gbpay
-
 	//GBPrimePay URL
 	//gburl := "https://api.globalprimepay.com/v1/check_status_txn"
 	gburl := "https://api.gbprimepay.com/v1/check_status_txn"
@@ -224,9 +228,10 @@ func (a *App) CheckTransaction(ref string) bool {
 	}
 }
 
-func (a *App) VoucherPopup() {
+func (a *App) VoucherPopup() bool {
 	//todo: screen to enter voucher code for free sessions
 	fmt.Println("Voucher popped")
+	return false
 }
 
 // for debugging purposes

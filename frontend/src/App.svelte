@@ -14,6 +14,12 @@
 
   //todo: pass ref instead of global var?
 
+  function home() {
+    page = 0
+    clearInterval(intervalID)
+    clearTimeout(timeoutID)
+  }
+
   function showChoice() {
     page = 1
     clearInterval(intervalID)
@@ -23,7 +29,7 @@
     page = 2
     timeout = 120
     ref = await QRpopup();
-	  timeoutID = setTimeout(() => page = 0, timeout*1000);
+	  timeoutID = setTimeout(() => home(), timeout*1000);
       intervalID = setInterval(function() {
         timeout--
       },1000)
@@ -33,21 +39,22 @@
     page = 3
     voucherinput = ""
     timeout = 30
-    timeoutID = setTimeout(() => page = 0, timeout*1000);
+    timeoutID = setTimeout(() => home(), timeout*1000);
     intervalID = setInterval(function() {
       timeout--
     },1000)
-    await VoucherPopup()
-  }
-  function checkPaid() {
-    let paid = CheckTransaction(ref)
-    if(paid) {
+    result = await VoucherPopup();
+    if(result) {
+      clearInterval(intervalID)
       clearTimeout(timeoutID)
     }
   }
-  function typein(s) {
-    var label = document.getElementById("voucherinput")
-    x.innerHTML = x.innerHTML + s
+  async function checkPaid() {
+    let paid = await CheckTransaction(ref)
+    if(paid) {
+      clearInterval(intervalID)
+      clearTimeout(timeoutID)
+    }
   }
 </script>
 
@@ -69,7 +76,7 @@
       <h1 class="timeout">{timeout} seconds</h1>
   {:else if page === 3}
     <div class="voucherpage">
-      <button class="btn back" on:click={() => (page = 0)}>Back</button>
+      <button class="btn back" on:click={() => (home())}>Back</button>
       <label class="voucherinput">{voucherinput}</label>
       <div class="numpad">
         <button class="num n0" on:click={() => voucherinput += 0}>0</button>
@@ -98,7 +105,7 @@
     left: 38vw;
   }
   .timeout {
-    margin-top: 0;
+    margin-top: 40px;
     grid-area: timeout;
   }
   .btn {
@@ -119,7 +126,7 @@
     background:url(./assets/pay.png) no-repeat;
     background-size: contain;
     background-position: center;
-    margin-top: 160px;
+    margin-top: 260px;
   }
   .voucherpage {
     display: grid;
@@ -136,7 +143,7 @@
     background:url(./assets/voucher.png) no-repeat;
     background-size: contain;
     background-position: center;
-    margin-top: 160px;
+    margin-top: 260px;
   }
   .back {
     background:url(./assets/back.png) no-repeat;
